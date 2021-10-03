@@ -1,8 +1,8 @@
 Each group member was in charge of identifying candlestick patterns for different time denominations of data: 
-hourly
-daily
-weekly
-15-days. 
+hourly (jpmaddox "Joshua Maddox")
+daily (David-Ingraham "David Ingraham")
+weekly (babajide "Babajide Ademola")
+15-days (augurnaut "Shannon Li")
 
 We focused on 4 types of events: 
 Head-and-Shoulders
