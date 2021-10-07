@@ -1,13 +1,8 @@
-Each group member was in charge of identifying candlestick patterns for different time denominations of data: 
-hourly (jpmaddox "Joshua Maddox")
-daily (David-Ingraham "David Ingraham")
-weekly (babajide "Babajide Ademola")
-15-days (augurnaut "Shannon Li")
+Each group member was in charge of different aspects of the project while collaborating on the project as a whole: 
+daily event identification (jpmaddox "Joshua Maddox" & augurnaut "Shannon Li")
+evaluation and explanation of a double bottom event (David-Ingraham "David Ingraham")
+mathematical and functional evaluation of a double bottom event (babajide "Babajide Ademola")
 
-We focused on 4 types of events: 
-Head-and-Shoulders
-Stubby Tails (inverse Head-and-Shoulders)
-Camel Humps (inverse Double Bottoms)
-Double Bottoms
+We're focusing on one type of event: Double Bottoms
 
 We used tradingview.com to capture examples of price data following up to and the aftermath of such events
