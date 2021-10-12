@@ -141,14 +141,14 @@ class GetEvents:
 
         # Iterrate through dataframes indexes
         for index in df.index:
-            cert_candle = update_cert(cert, index, df)
-            curr_candle = update_curr(curr, index, df)
-            prev_candle = update_prev(prev, index, df)
+            cert_candle = self.update_cert(cert, index, df)
+            curr_candle = self.update_curr(curr, index, df)
+            prev_candle = self.update_prev(prev, index, df)
 
             # pont f arbitrary - 5 periods out
             # when finished will have 6 values
-            mx = find_max(cert_candle, curr_candle, prev_candle)
-            mn = find_min(cert_candle, curr_candle, prev_candle)
+            mx = self.find_max(cert_candle, curr_candle, prev_candle)
+            mn = self.find_min(cert_candle, curr_candle, prev_candle)
 
             # max stores close and high
             # min stores close and low
@@ -175,147 +175,167 @@ class GetEvents:
     def get_events(self, new_df):
         """Returns dataframe with binary encoded events"""
         
-        new_df['Events'] = 0
-        
+        # Init return variables
         events_list = [None, None, None, None, None]
         search_c = {}
+        total_occurrences = 0
+        occurrences = {}
         
+        # Init helper variables
         buy = None
         sell = None
-        
-        total_events = 0
+        sales = []
+        buys = []
+        maxs = []
+        mins = []
         
         for index in new_df.index:
+            # Store all local max indexes
+            if new_df.loc[index, 'Max'] == 1:
+                maxs.append(index)
+                
+            # Store all local min indexes
+            if new_df.loc[index, 'Min'] == 1:
+                mins.append(index)
+                
             # Start search for A if A is none
             if events_list[0] == None:
-                if new_df.loc[index]['Max'] == 1:
+                if new_df.loc[index, 'Max'] == 1:
                     events_list[0] = index
-                    new_df.loc[index]['A'] = 1.0
+                    new_df.loc[index, 'A'] = 1
+                    
                     
             # Show that A exists
-            elif events_list != None:
-                new_df.loc[index]['A'] = 1.0
+            elif events_list[0] != None:
+                new_df.loc[index, 'A'] = 1
                 
             # Reset if does not exist
             else:
-                new_df.loc[index]['A'] = 0
+                new_df.loc[index, 'A'] = 0
                 
             # Start search for B if B is none
             if (events_list[1] == None) & (events_list[0] != None):
-                if new_df.loc[index]['Min'] == 1:
-                    if new_df.loc[index]['Close'] < new_df.loc[events_list[0]]['Close']:
+                if new_df.loc[index, 'Min'] == 1:
+                    if new_df.loc[index, 'Close'] < new_df.loc[events_list[0], 'Close']:
                         events_list[1] = index
-                        new_df.loc[index]['B'] = 1.0
+                        new_df.loc[index, 'B'] = 1
+                    else:
+                        new_df.loc[index, 'B'] = 0
                         
             # Show that B exists
             elif events_list[1] != None:
-                new_df.loc[index]['B'] = 1.0
+                new_df.loc[index, 'B'] = 1
                 
             # Reset if does not exist    
             else:
-                new_df.loc[index]['B'] = 0
+                new_df.loc[index, 'B'] = 0
 
             # Start search for C
             if (events_list[2] == None) & (events_list[1] != None) & (events_list[0] != None):
-                if new_df.loc[index]['Max'] == 1:
+                if new_df.loc[index, 'Max'] == 1:
                     
                     # Establish conditions
-                    condition_1 = (new_df.loc[index]['Close'] > new_df.loc[events_list[1]]['Close'])
-                    condition_2 = (new_df.loc[index]['Close'] < new_df.loc[events_list[0]]['Close'])
+                    condition_1 = (new_df.loc[index, 'Close'] > new_df.loc[events_list[1], 'Close'])
+                    condition_2 = (new_df.loc[index, 'Close'] < new_df.loc[events_list[0], 'Close'])
                     
                     # if C is in range between B and A
                     if condition_1 & condition_2:
                         events_list[2] = index
-                        new_df.loc[index]['C'] = 1.0
+                        new_df.loc[index, 'C'] = 1
                         
                     # if C is higher than A
-                    elif new_df.loc[index]['Close'] > new_df.loc[events_list[0]]['Close']:
-                        events_list = [events_list[0], None, None, None, None]
+                    elif new_df.loc[index, 'Close'] > new_df.loc[events_list[0], 'Close']:
+                        new_df.loc[index, 'C'] = 0
+                        new_df.loc[index, 'B'] = 0
+                        events_list = [None, None, None, None, None]
                         
             # Show if C exists
             elif events_list[2] != None:
-                new_df.loc[index]['C'] = 1.0
+                new_df.loc[index, 'C'] = 1
                 
             # Reset if does not exist   
             else:
-                new_df.loc[index]['C'] = 0
+                new_df.loc[index, 'C'] = 0
                 
             # Start search for D
             if (events_list[3] == None) & (events_list[2] != None) & (events_list[1] != None) & (events_list[0] != None):
-                if new_df.loc[index]['Min'] == 1:   
+                if new_df.loc[index, 'Min'] == 1:   
                     
                     # Establish conditions
-                    condition_1 = (new_df.loc[index]['Close'] < new_df.loc[events_list[1]]['Close'])
-                    condition_2 = (new_df.loc[index]['Close'] > new_df.loc[events_list[1]]['Low'])
-                    condition_3 = (new_df.loc[index]['Low'] < new_df.loc[events_list[1]]['Close'])
-                    condition_4 = (new_df.loc[index]['Low'] > new_df.loc[events_list[1]]['Low'])
+                    condition_1 = (new_df.loc[index, 'Close'] < new_df.loc[events_list[1], 'Close'])
+                    condition_2 = (new_df.loc[index, 'Close'] > new_df.loc[events_list[1], 'Low'])
+                    condition_3 = (new_df.loc[index, 'Low'] < new_df.loc[events_list[1], 'Close'])
+                    condition_4 = (new_df.loc[index, 'Low'] > new_df.loc[events_list[1], 'Low'])
+                    
+                    # Exit conditions
+                    e_cond = (new_df.loc[index, 'Close'] < new_df.loc[events_list[1], 'Low'])
                     
                     # if D is in the range of B's low and close
                     if condition_1 & condition_2 | condition_3 & condition_4:
                         events_list[3] = index
-                        new_df.loc[index]['D'] = 1
+                        new_df.loc[index, 'D'] = 1
                         
                         # Search between B and D for highest max
                         for index in new_df.loc[events_list[1]:events_list[3]].index:
-                            if new_df.loc[index]['Max'] == 1:
-                                search_c[index] = new_df.loc[index]['Close']
+                            if new_df.loc[index, 'Max'] == 1:
+                                search_c[index] = new_df.loc[index, 'Close']
 
                         # find max c value and add it to the events list
                         max_c = max(search_c, key = lambda x: search_c[x])
                         events_list[2] = max_c
                         max_c = max_c.to_datetime64()
-                        new_df.loc[max_c]['C'] = 1
-
+                        new_df.loc[max_c, 'C'] = 1
+                    
                     # if D is less than B's low
-                    elif (new_df.loc[index]['Close'] < new_df.loc[events_list[1]]['Low']):
-                        events_list = [max_c, None, None, None, None]
-                        search_c = {}
+                    elif e_cond:
+                        if new_df.loc[index, 'Min'] == 1:
+                            events_list = [maxs[-1], index, None, None, None]
+                            search_c = {}
+                        else:
+                            events_list = [maxs[-1], None, None, None, None]
+                            search_c = {}
                         
             # Show if D exists
             elif events_list[3] != None:
-                new_df.loc[index]['D'] = 1.0
+                new_df.loc[index, 'D'] = 1
             
             # Reset if does not exist
             else:
-                new_df.loc[index]['D'] = 0
+                new_df.loc[index, 'D'] = 0
                 
             # start search E trade (entry)
             if (events_list[4] == None) & (events_list[3] != None) & (events_list[2] != None) & (events_list[1] != None) & (events_list[0] != None):
-                if new_df.loc[index]['Close'] > new_df.loc[events_list[2]]['Close']:
+                if new_df.loc[index, 'Close'] > new_df.loc[events_list[2], 'Close']:
                     events_list[4] = index
-                    new_df.loc[index]['E'] = 1
-                    new_df.loc[index]['DB'] = 1
-                    
+                    new_df.loc[index, 'E'] = 1
+                    new_df.loc[index, 'DB'] = 1
+                    occurrences[total_occurrences] = events_list
+                    total_occurrences += 1
                     
                     if events_list[4] != None:
                         events_list = [None, None, None, None, None]
-                        
-
                     
                 # restart if close below D
-                elif new_df.loc[index]['Close'] < new_df.loc[events_list[3]]['Low']:
-                    display(events_list)
+                elif new_df.loc[index, 'Close'] < new_df.loc[events_list[3], 'Low']:
                     new_a = events_list[2]
                     events_list = [new_a, None, None, None, None]
                     search_c = {}
                     
-            if new_df.loc[index]['DB'] == 1:
+            # Store buy date
+            if new_df.loc[index, 'DB'] == 1:
                 buy = index
-                sell = (index + datetime.timedelta(days=5)).to_datetime64()
-                total_events += 1
-                new_df.loc[index]['Events'] = total_events
-                
+                sell = (index + datetime.timedelta(days=10)).to_datetime64()
+                sales.append(sell)
+                buys.append(buy)
+                events_list = [None, None, None, None, None]
+            
+            # Create sell events
             if sum(new_df.index == sell) > 0:
-                new_df.loc[buy]['F'] = 0
-                new_df.loc[sell]['F'] = float(new_df.loc[sell]['Close'] - new_df.loc[buy]['Close'])
-                new_df.loc[sell]['DB'] = -1
-                
+                new_df.loc[buy, 'F'] = 0
+                new_df.loc[sell, 'F'] = float(new_df.loc[sell, 'Close'] - new_df.loc[buy, 'Close'])
+                new_df.loc[sell]['DB'] = -1          
             
-            print(events_list)
-            print(new_df.loc[index])
-                
-            
-        return new_df
+        return new_df, total_occurrences, occurrences, sales
 
     def output(self):
 
