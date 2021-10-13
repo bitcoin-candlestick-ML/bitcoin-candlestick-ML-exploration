@@ -204,6 +204,8 @@ class GetEvents:
                     events_list[0] = index
                     new_df.loc[index, 'A'] = 1
                     
+                elif new_df.loc[index, 'Max'] != 1:
+                    new_df.loc[index, 'A'] == 0
                     
             # Show that A exists
             elif events_list[0] != None:
@@ -219,6 +221,7 @@ class GetEvents:
                     if new_df.loc[index, 'Close'] < new_df.loc[events_list[0], 'Close']:
                         events_list[1] = index
                         new_df.loc[index, 'B'] = 1
+                    
                     else:
                         new_df.loc[index, 'B'] = 0
                         
@@ -232,6 +235,7 @@ class GetEvents:
 
             # Start search for C
             if (events_list[2] == None) & (events_list[1] != None) & (events_list[0] != None):
+                
                 if new_df.loc[index, 'Max'] == 1:
                     
                     # Establish conditions
@@ -240,11 +244,13 @@ class GetEvents:
                     
                     # if C is in range between B and A
                     if condition_1 & condition_2:
+                        
                         events_list[2] = index
                         new_df.loc[index, 'C'] = 1
                         
                     # if C is higher than A
                     elif new_df.loc[index, 'Close'] > new_df.loc[events_list[0], 'Close']:
+                        
                         new_df.loc[index, 'C'] = 0
                         new_df.loc[index, 'B'] = 0
                         events_list = [None, None, None, None, None]
@@ -259,6 +265,7 @@ class GetEvents:
                 
             # Start search for D
             if (events_list[3] == None) & (events_list[2] != None) & (events_list[1] != None) & (events_list[0] != None):
+                
                 if new_df.loc[index, 'Min'] == 1:   
                     
                     # Establish conditions
@@ -272,11 +279,13 @@ class GetEvents:
                     
                     # if D is in the range of B's low and close
                     if condition_1 & condition_2 | condition_3 & condition_4:
+                        
                         events_list[3] = index
                         new_df.loc[index, 'D'] = 1
                         
                         # Search between B and D for highest max
                         for index in new_df.loc[events_list[1]:events_list[3]].index:
+                            
                             if new_df.loc[index, 'Max'] == 1:
                                 search_c[index] = new_df.loc[index, 'Close']
 
@@ -285,12 +294,29 @@ class GetEvents:
                         events_list[2] = max_c
                         max_c = max_c.to_datetime64()
                         new_df.loc[max_c, 'C'] = 1
+
+                    
+                    elif (new_df.loc[index, 'Close'] > new_df.loc[events_list[2], 'Close']) & (new_df.loc[index, 'Close'] > new_df.loc[events_list[0], 'Close']):
+                        
+                        if new_df.loc[index, 'Max'] == 1:
+                            events_list = [index, None, None, None, None]
+                            search_c = {}
+                            
+                        elif new_df.loc[index, 'Min'] == 1:
+                            events_list = [maxs[-1], index, None, None, None]
+                            search_c = {}
                     
                     # if D is less than B's low
                     elif e_cond:
+                        
                         if new_df.loc[index, 'Min'] == 1:
                             events_list = [maxs[-1], index, None, None, None]
                             search_c = {}
+                            
+                        elif new_df.loc[index, 'Max'] == 1:
+                            events_list = [index, None, None, None, None]
+                            search_c = {}
+                            
                         else:
                             events_list = [maxs[-1], None, None, None, None]
                             search_c = {}
@@ -314,6 +340,8 @@ class GetEvents:
                     
                     if events_list[4] != None:
                         events_list = [None, None, None, None, None]
+                        
+
                     
                 # restart if close below D
                 elif new_df.loc[index, 'Close'] < new_df.loc[events_list[3], 'Low']:
@@ -321,22 +349,23 @@ class GetEvents:
                     events_list = [new_a, None, None, None, None]
                     search_c = {}
                     
-            # Store buy date
+            # Set buy date
             if new_df.loc[index, 'DB'] == 1:
                 buy = index
-                sell = (index + datetime.timedelta(days=10)).to_datetime64()
+                sell = (index + datetime.timedelta(days=5)).to_datetime64()
                 sales.append(sell)
                 buys.append(buy)
                 events_list = [None, None, None, None, None]
-            
+                
             # Create sell events
             if sum(new_df.index == sell) > 0:
                 new_df.loc[buy, 'F'] = 0
-                new_df.loc[sell, 'F'] = float(new_df.loc[sell, 'Close'] - new_df.loc[buy, 'Close'])
-                new_df.loc[sell]['DB'] = -1          
+                new_df.loc[sell, 'F'] = float(new_df.loc[sell, 'Close'] - new_df.loc[buy, 'Close'])                      
             
         return new_df, total_occurrences, occurrences, sales
 
     def output(self):
-
-        return self.get_events(self.create_dataframe(self.df))
+        """
+        Returns New DF, Total Occurences, Specific Occurences, Specific Sells"""
+        new_df, total_occurrences, occurrences, sales = self.get_events(self.create_dataframe(self.df))
+        return new_df, total_occurrences, occurrences, sales
