@@ -22,13 +22,16 @@ During this span of time we were able to succesfully identify 21 trading signals
 Our dataframe has some of the following columns
 Columns A-F represent the presence of event points in binary format - 0 (No event point) 1 (Event present).
 DB - 0 (No double bottom) 1 (Double bottom finished at point, a.k.a entry)
+
 [DataFrame - Model 1](Resources/features_2017-2021.csv)
 
 In here are the images of the events the algo found
+
 [Events Found From Algorithm](Resources/event_figures)
 
 We also include a variety of metrics to aid our linear regression model in finding the most succesful signals.
 This is the DataFrame used to train our linear regression model
+
 [DataFrame - Model 2](Resources/21_features.csv)
 
 ## Models
