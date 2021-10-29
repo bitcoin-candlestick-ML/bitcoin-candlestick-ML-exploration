@@ -8,7 +8,7 @@
 We narrowed our project focus to one specific pattern due to constraints. We also focus on bitcoin as our main asset. Still, this code can be modified easily to find other patterns, and it can currently be applied to any asset with OHLC data.***
 
 ## What is a Double Bottom?
-![Double Bottom](bitcoin-candlestick-ML-exploration/candlestick-examples/BTCUSD_2021-10-06_19-35-05.png)
+![Double Bottom](./bitcoin-candlestick-ML-exploration/candlestick-examples/BTCUSD_2021-10-06_19-35-05.png)
 Above is an image of a double bottom with the most important points marked as A-E
 A - Lead Up
 B - First Bottom
